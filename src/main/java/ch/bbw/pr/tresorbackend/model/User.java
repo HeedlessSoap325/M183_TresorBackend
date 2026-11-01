@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Set;
+
 /**
  * User
  * @author Peter Rutschmann
@@ -35,4 +37,13 @@ public class User {
 
     @Column(nullable = false)
     private String salt;
+
+    @ElementCollection(targetClass = SecurityRole.class, fetch = FetchType.EAGER)
+    @CollectionTable(
+        name = "user_authority",
+        joinColumns = @JoinColumn(name = "user_id")
+    )
+    @Column(name = "user_authority")
+    @Enumerated(EnumType.STRING)
+    private Set<SecurityRole> authorities;
 }

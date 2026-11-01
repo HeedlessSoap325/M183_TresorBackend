@@ -30,7 +30,7 @@ public class SecretController {
     private final UserService userService;
 
     // create secret REST API
-    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.crossOrigin}")
+    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PostMapping("/")
     public ResponseEntity<String> createSecret2(@Valid @RequestBody NewSecret newSecret) {
         User user = userService.findByEmail(newSecret.getEmail());
@@ -56,7 +56,7 @@ public class SecretController {
     }
 
     // Build Get Secrets by userId REST API
-    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.crossOrigin}")
+    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PostMapping("/byuserid")
     public ResponseEntity<List<Secret>> getSecretsByUserId(@Valid @RequestBody EncryptCredentials credentials) {
         TresorbackendApplication.getLogger().info("SecretController.getSecretsByUserId: EncryptCredentials(userId = {}, email = {})", credentials.getUserId(), credentials.getEmail());
@@ -85,7 +85,7 @@ public class SecretController {
     }
 
     // Build Get Secrets by email REST API
-    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.crossOrigin}")
+    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PostMapping("/byemail")
     public ResponseEntity<List<Secret>> getSecretsByEmail(@Valid @RequestBody EncryptCredentials credentials) {
         TresorbackendApplication.getLogger().info("SecretController.getSecretsByEmail: EncryptCredentials(userId = {}, email = {})", credentials.getUserId(), credentials.getEmail());
@@ -115,7 +115,7 @@ public class SecretController {
 
     // Build Get All Secrets REST API
     // http://localhost:8080/api/secrets
-    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.crossOrigin}")
+    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @GetMapping("/")
     public ResponseEntity<List<Secret>> getAllSecrets() {
         List<Secret> secrets = secretService.getAllSecrets();
@@ -124,7 +124,7 @@ public class SecretController {
 
     // Build Update Secrete REST API
     // http://localhost:8080/api/secrets/1
-    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.crossOrigin}")
+    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PutMapping("{id}")
     public ResponseEntity<String> updateSecret(@PathVariable("id") Long secretId, @Valid @RequestBody NewSecret newSecret) {
         // get Secret with id
@@ -181,7 +181,7 @@ public class SecretController {
     }
 
     // Build Delete Secret REST API
-    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.crossOrigin}")
+    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @DeleteMapping("{id}")
     public ResponseEntity<String> deleteSecret(@PathVariable("id") Long secretId) {
         // todo: Some kind of brute force delete, perhaps test first userid and encryptpassword
