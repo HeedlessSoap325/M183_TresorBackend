@@ -45,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
 
         RotationResult result = refreshTokenService.validateAndRotate(refreshToken);
         String accessToken = jwtService.generateAccessToken(result.getUser());
-        addRefreshTokenCookie(response, accessToken);
+        addRefreshTokenCookie(response, result.getRefreshToken());
 
         return ResponseEntity.ok().body(
             new AuthResponse(
