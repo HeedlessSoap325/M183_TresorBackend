@@ -1,6 +1,7 @@
 package ch.bbw.pr.tresorbackend.model;
 
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
@@ -21,6 +22,6 @@ public class ResetPassword {
     @NotEmpty (message="New-Password-confirmation is required.")
     private String newPasswordConfirmation;
 
-    @NotEmpty(message = "resetToken is required.")
+    @NotNull(message = "resetToken is required.")
     private UUID resetToken;
 }
