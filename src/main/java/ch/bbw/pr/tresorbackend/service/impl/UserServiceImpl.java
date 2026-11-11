@@ -1,10 +1,8 @@
 package ch.bbw.pr.tresorbackend.service.impl;
 
 import ch.bbw.pr.tresorbackend.TresorbackendApplication;
-import ch.bbw.pr.tresorbackend.model.EmailAdress;
-import ch.bbw.pr.tresorbackend.model.ForgottenPasswordToken;
-import ch.bbw.pr.tresorbackend.model.ResetPassword;
-import ch.bbw.pr.tresorbackend.model.User;
+import ch.bbw.pr.tresorbackend.exception.ApplicationError;
+import ch.bbw.pr.tresorbackend.model.*;
 import ch.bbw.pr.tresorbackend.repository.ForgottenPasswordTokenRepository;
 import ch.bbw.pr.tresorbackend.repository.UserRepository;
 import ch.bbw.pr.tresorbackend.service.MailService;
@@ -15,8 +13,10 @@ import ch.bbw.pr.tresorbackend.service.UserService;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,41 +33,57 @@ public class UserServiceImpl implements UserService {
     private MailService mailService;
 
     @Override
-    public User createUser(User user) {
-        return SafeDbCall.safeDbCall(() -> userRepository.save(user), null);
+    public User createUser(User user) throws ApplicationError {
+        User savedUser = SafeDbCall.safeDbCall(() -> userRepository.save(user), null);
+        if (savedUser == null) {
+            throw new ApplicationError(HttpStatus.INTERNAL_SERVER_ERROR, "Could not save user");
+        }
+
+        return savedUser;
     }
 
     @Override
-    public User getUserById(Long userId) {
+    public User getUserById(Long userId) throws ApplicationError {
         Optional<User> user = SafeDbCall.safeDbCall(() -> userRepository.findById(userId), Optional.empty());
-        return user.orElse(null);
+        if (user.isEmpty()) {
+            throw new ApplicationError(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        return user.get();
     }
 
     @Override
-    public User findByEmail(String email) {
+    public User findByEmail(String email) throws ApplicationError {
         Optional<User> user = SafeDbCall.safeDbCall(() -> userRepository.findByEmail(email), Optional.empty());
-        return user.orElse(null);
+        if (user.isEmpty()) {
+            throw new ApplicationError(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        return user.get();
     }
 
     @Override
     public List<User> getAllUsers() {
-        return (List<User>) SafeDbCall.safeDbCall(() -> userRepository.findAll(), List.of());
+        return SafeDbCall.safeDbCall(() -> userRepository.findAll(), List.of());
     }
 
     @Override
-    public User updateUser(User user) {
-        Optional<User> optionalExistingUser = SafeDbCall.safeDbCall(() ->
-                        userRepository.findById(user.getId()),
-                Optional.empty()
-        );
-        if (optionalExistingUser.isEmpty()) return null;
+    public User updateUser(User user) throws ApplicationError {
+        Optional<User> optionalExistingUser = SafeDbCall.safeDbCall(() -> userRepository.findById(user.getId()), Optional.empty());
+        if (optionalExistingUser.isEmpty()) {
+            throw new ApplicationError(HttpStatus.NOT_FOUND, "User not found");
+        };
 
         User existingUser = optionalExistingUser.get();
         existingUser.setFirstName(user.getFirstName());
         existingUser.setLastName(user.getLastName());
         existingUser.setEmail(user.getEmail());
-        User updatedUser = userRepository.save(existingUser);
-        return updatedUser;
+        User savedUser = SafeDbCall.safeDbCall(() -> userRepository.save(existingUser), null);
+        if (savedUser == null) {
+            throw new ApplicationError(HttpStatus.INTERNAL_SERVER_ERROR, "Could not save user");
+        }
+
+        return savedUser;
     }
 
     @Override
@@ -109,35 +125,23 @@ public class UserServiceImpl implements UserService {
                 !forgottenPasswordTokenOptional.get().getId().equals(resetPassword.getResetToken()) ||
                 !forgottenPasswordTokenOptional.get().getEmail().equals(resetPassword.getEmail())
         ) {
-            obj.addProperty("message", "Reset link is invalid. Please check the link and provided email.");
-            String json = new Gson().toJson(obj);
-            return ResponseEntity.badRequest().body(json);
+            throw new ApplicationError(HttpStatus.BAD_REQUEST, "Reset link is invalid. Please check the link and provided email.");
         }
         ForgottenPasswordToken token = forgottenPasswordTokenOptional.get();
 
         if (token.isExpired()) {
             TresorbackendApplication.getLogger().info("UserServiceImpl.handleResetPassword: request invalid ResetPassword(email = {}, resetToken = {})",  resetPassword.getEmail(), resetPassword.getResetToken());
-            obj.addProperty("message", "Reset link expired. Please try again with a new reset link.");
-            String json = new Gson().toJson(obj);
-            return ResponseEntity.badRequest().body(json);
+            throw new ApplicationError(HttpStatus.BAD_REQUEST, "Reset link expired. Please try again with a new reset link.");
         }
 
         if (!resetPassword.getNewPassword().equals(resetPassword.getNewPasswordConfirmation())) {
             TresorbackendApplication.getLogger().info("UserServiceImpl.handleResetPassword: passwords didn't match.");
-            obj.addProperty("message", "Passwords do not match.");
-            String json = new Gson().toJson(obj);
-            return ResponseEntity.badRequest().body(json);
+            throw new ApplicationError(HttpStatus.BAD_REQUEST, "Passwords do not match.");
         }
 
-        Optional<User> optionalExistingUser = SafeDbCall.safeDbCall(() ->
-                        userRepository.findByEmail(resetPassword.getEmail()),
-                Optional.empty()
-        );
-
+        Optional<User> optionalExistingUser = SafeDbCall.safeDbCall(() -> userRepository.findByEmail(resetPassword.getEmail()), Optional.empty());
         if (optionalExistingUser.isEmpty()) {
-            obj.addProperty("message", "User not found.");
-            String json = new Gson().toJson(obj);
-            return ResponseEntity.badRequest().body(json);
+            throw new ApplicationError(HttpStatus.NOT_FOUND, "No such email address.");
         }
 
         User user = optionalExistingUser.get();

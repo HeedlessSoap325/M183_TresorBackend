@@ -9,12 +9,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,7 +32,6 @@ public class SecretController {
     @PostMapping("/")
     public ResponseEntity<String> createSecret2(@Valid @RequestBody NewSecret newSecret) {
         User user = userService.findByEmail(newSecret.getEmail());
-        if (user == null) return ResponseEntity.notFound().build();
 
         //transfer secret and encrypt content
         Secret secret = new Secret(
@@ -62,22 +59,16 @@ public class SecretController {
         TresorbackendApplication.getLogger().info("SecretController.getSecretsByUserId: EncryptCredentials(userId = {}, email = {})", credentials.getUserId(), credentials.getEmail());
 
         User user = userService.getUserById(credentials.getUserId());
-        if (user == null) return ResponseEntity.notFound().build();
 
         List<Secret> secrets = secretService.getSecretsByUserId(credentials.getUserId());
         if (secrets.isEmpty()) {
             TresorbackendApplication.getLogger().info("SecretController.getSecretsByUserId: secret is empty");
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(secrets);
         }
 
         // Decrypt content
         for(Secret secret: secrets) {
-            try {
-                secret.setContent(new EncryptUtil(credentials.getEncryptPassword(), user.getSalt()).decrypt(secret.getContent()));
-            } catch (EncryptionOperationNotPossibleException e) {
-                TresorbackendApplication.getLogger().info("SecretController.getSecretsByUserId: failed to decrypt secret: {} Secret(id = {}, userId = {})", e, secret.getId(), secret.getUserId());
-                secret.setContent("not encryptable. Wrong password?");
-            }
+            secret.setContent(new EncryptUtil(credentials.getEncryptPassword(), user.getSalt()).decrypt(secret.getContent()));
         }
 
         TresorbackendApplication.getLogger().info("SecretController.getSecretsByUserId: successfully decrypted all user secrets");
@@ -91,22 +82,16 @@ public class SecretController {
         TresorbackendApplication.getLogger().info("SecretController.getSecretsByEmail: EncryptCredentials(userId = {}, email = {})", credentials.getUserId(), credentials.getEmail());
 
         User user = userService.findByEmail(credentials.getEmail());
-        if (user == null) return ResponseEntity.notFound().build();
 
         List<Secret> secrets = secretService.getSecretsByUserId(user.getId());
         if (secrets.isEmpty()) {
             TresorbackendApplication.getLogger().info("SecretController.getSecretsByEmail: secret is empty");
-            return ResponseEntity.ok(Collections.emptyList());
+            return ResponseEntity.ok(secrets);
         }
 
         // Decrypt content
         for(Secret secret: secrets) {
-            try {
-                secret.setContent(new EncryptUtil(credentials.getEncryptPassword(), user.getSalt()).decrypt(secret.getContent()));
-            } catch (EncryptionOperationNotPossibleException e) {
-                TresorbackendApplication.getLogger().info("SecretController.getSecretsByEmail: failed to decrypt secret: {} Secret(id = {}, userId = {})", e, secret.getId(), secret.getUserId());
-                secret.setContent("not encryptable. Wrong password?");
-            }
+            secret.setContent(new EncryptUtil(credentials.getEncryptPassword(), user.getSalt()).decrypt(secret.getContent()));
         }
 
         TresorbackendApplication.getLogger().info("SecretController.getSecretsByEmail: successfully decrypted all user secrets");
@@ -129,14 +114,6 @@ public class SecretController {
     public ResponseEntity<String> updateSecret(@PathVariable("id") Long secretId, @Valid @RequestBody NewSecret newSecret) {
         // get Secret with id
         Secret dbSecrete = secretService.getSecretById(secretId);
-        if(dbSecrete == null){
-            TresorbackendApplication.getLogger().info("SecretController.updateSecret: secret not found in db");
-
-            JsonObject obj = new JsonObject();
-            obj.addProperty("answer", "Secret not found in db");
-            String json = new Gson().toJson(obj);
-            return ResponseEntity.badRequest().body(json);
-        }
         User user = userService.findByEmail(newSecret.getEmail());
         if (user == null) return ResponseEntity.notFound().build();
 
@@ -151,16 +128,7 @@ public class SecretController {
         }
 
         // check if Secret can be decrypted with password
-        try {
-            new EncryptUtil(newSecret.getEncryptPassword(), user.getSalt()).decrypt(dbSecrete.getContent());
-        } catch (EncryptionOperationNotPossibleException e) {
-            TresorbackendApplication.getLogger().info("SecretController.updateSecret: invalid password");
-
-            JsonObject obj = new JsonObject();
-            obj.addProperty("answer", "Password not correct.");
-            String json = new Gson().toJson(obj);
-            return ResponseEntity.badRequest().body(json);
-        }
+        new EncryptUtil(newSecret.getEncryptPassword(), user.getSalt()).decrypt(dbSecrete.getContent());
 
         // modify Secret in db.
         Secret secret = new Secret(

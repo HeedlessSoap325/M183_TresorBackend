@@ -1,11 +1,13 @@
 package ch.bbw.pr.tresorbackend.controller;
 
 import ch.bbw.pr.tresorbackend.TresorbackendApplication;
+import ch.bbw.pr.tresorbackend.exception.ApplicationError;
 import ch.bbw.pr.tresorbackend.model.*;
 import ch.bbw.pr.tresorbackend.service.*;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
@@ -24,17 +26,17 @@ public class AuthController {
     // build create User REST API
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> createUser(@Valid @RequestBody RegisterUser registerUser, HttpServletResponse response) {
+    public ResponseEntity<AuthResponse> createUser(@Valid @RequestBody RegisterUser registerUser, HttpServletResponse response) throws ApplicationError {
         TresorbackendApplication.getLogger().info("AuthController.createUser: RegisterUser(firstname = {}, lastname = {}, email = {})", registerUser.getFirstName(), registerUser.getLastName(), registerUser.getEmail());
 
         if (!registerUser.getPassword().equals(registerUser.getPasswordConfirmation())) {
             TresorbackendApplication.getLogger().info("AuthController.createUser: Passwords do not match");
-            return ResponseEntity.badRequest().body(new AuthResponse());
+            throw new ApplicationError(HttpStatus.BAD_REQUEST, "Passwords do not match");
         }
 
         if (!reCAPTCHAService.verifyCaptcha(registerUser.getCaptchaToken())) {
             TresorbackendApplication.getLogger().info("AuthController.createUser: Captcha verification failed");
-            return ResponseEntity.badRequest().body(new AuthResponse());
+            throw new  ApplicationError(HttpStatus.BAD_REQUEST, "Captcha verification failed");
         }
 
         // transform registerUser to user
@@ -55,18 +57,14 @@ public class AuthController {
     // simple login with no websecurity, just name and password
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> doLoginUser(@Valid @RequestBody LoginUser loginUser, HttpServletResponse response) {
+    public ResponseEntity<AuthResponse> doLoginUser(@Valid @RequestBody LoginUser loginUser, HttpServletResponse response) throws ApplicationError {
         TresorbackendApplication.getLogger().info("AuthController.doLoginUser: LoginUser(email = {})", loginUser.getEmail());
 
         User user = userService.findByEmail(loginUser.getEmail());
-        if (user == null) {
-            TresorbackendApplication.getLogger().info("AuthController.doLoginUser: user not found");
-            return ResponseEntity.badRequest().body(new AuthResponse());
-        }
 
         if (!passwordService.matchPassword(loginUser.getPassword(), user.getPassword())) {
             TresorbackendApplication.getLogger().info("AuthController.doLoginUser: provided password and hash didn't match");
-            return ResponseEntity.badRequest().body(new AuthResponse());
+            throw new ApplicationError(HttpStatus.BAD_REQUEST, "Email and password combination does not match");
         }
 
         TresorbackendApplication.getLogger().info("AuthController.doLoginUser: login successful");
@@ -77,7 +75,7 @@ public class AuthController {
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@CookieValue(name = "__Host-refresh", required = false) String refreshToken, HttpServletResponse response) {
-        return authService.refreshToken(refreshToken, response);
+        return ResponseEntity.ok(authService.refreshToken(refreshToken, response));
     }
 
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")

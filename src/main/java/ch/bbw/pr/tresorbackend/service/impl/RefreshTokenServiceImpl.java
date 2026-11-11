@@ -1,14 +1,16 @@
 package ch.bbw.pr.tresorbackend.service.impl;
 
+import ch.bbw.pr.tresorbackend.TresorbackendApplication;
+import ch.bbw.pr.tresorbackend.exception.ApplicationError;
 import ch.bbw.pr.tresorbackend.model.ConfigProperties;
 import ch.bbw.pr.tresorbackend.model.RefreshToken;
 import ch.bbw.pr.tresorbackend.model.RotationResult;
 import ch.bbw.pr.tresorbackend.model.User;
 import ch.bbw.pr.tresorbackend.repository.RefreshTokenRepository;
-import ch.bbw.pr.tresorbackend.service.JwtService;
 import ch.bbw.pr.tresorbackend.service.RefreshTokenService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -24,7 +26,6 @@ import java.util.HexFormat;
 public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final ConfigProperties configProperties;
-    private final JwtService jwtService;
 
     @Override
     public String generateToken() {
@@ -38,7 +39,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Override
-    public String hashToken(String token) {
+    public String hashToken(String token) throws ApplicationError {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
@@ -46,12 +47,13 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+            TresorbackendApplication.getLogger().error(e.getMessage());
+            throw new ApplicationError(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to hash refresh token");
         }
     }
 
     @Override
-    public String createRefreshToken(User user) {
+    public String createRefreshToken(User user) throws ApplicationError {
         String rawToken = generateToken();
 
         RefreshToken refreshToken = new RefreshToken();
@@ -68,21 +70,21 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     @Transactional
-    public RotationResult validateAndRotate(String rawToken) {
+    public RotationResult validateAndRotate(String rawToken) throws ApplicationError {
         String hash = hashToken(rawToken);
 
         RefreshToken oldToken = refreshTokenRepository
             .findByTokenHash(hash)
             .orElseThrow(() ->
-                new RuntimeException("Invalid refresh token")
+                new ApplicationError(HttpStatus.BAD_REQUEST, "Invalid refresh token")
             );
 
         if (oldToken.isRevoked()) {
-            throw new RuntimeException("Token has been revoked");
+            throw new ApplicationError(HttpStatus.BAD_REQUEST, "Token has been revoked");
         }
 
         if (oldToken.getExpiryDate().isBefore(Instant.now())) {
-            throw new RuntimeException("Token has expired");
+            throw new ApplicationError(HttpStatus.BAD_REQUEST, "Token has expired");
         }
 
         User user = oldToken.getUser();
@@ -96,16 +98,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     @Transactional
-    public void revokeToken(String rawToken) {
-
+    public void revokeToken(String rawToken) throws ApplicationError {
         String hash = hashToken(rawToken);
 
-        RefreshToken refreshToken = refreshTokenRepository
+        refreshTokenRepository
             .findByTokenHash(hash)
-            .orElse(null);
-
-        if (refreshToken != null) {
-            refreshToken.setRevoked(true);
-        }
+            .ifPresent(refreshToken -> refreshToken.setRevoked(true));
     }
 }

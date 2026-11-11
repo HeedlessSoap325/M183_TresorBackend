@@ -1,6 +1,7 @@
 package ch.bbw.pr.tresorbackend.controller;
 
 import ch.bbw.pr.tresorbackend.TresorbackendApplication;
+import ch.bbw.pr.tresorbackend.exception.ApplicationError;
 import ch.bbw.pr.tresorbackend.model.*;
 import ch.bbw.pr.tresorbackend.service.UserService;
 
@@ -8,6 +9,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +31,6 @@ public class UserController {
     @GetMapping("{id}")
     public ResponseEntity<User> getUserById(@PathVariable("id") Long userId) {
         User user = userService.getUserById(userId);
-        if (user == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok().body(user);
     }
 
@@ -39,7 +40,6 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
-        if (users.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok().body(users);
     }
 
@@ -50,7 +50,6 @@ public class UserController {
     public ResponseEntity<User> updateUser(@PathVariable("id") Long userId, @Valid @RequestBody User user) {
         user.setId(userId);
         User updatedUser = userService.updateUser(user);
-        if (updatedUser == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok().body(updatedUser);
     }
 

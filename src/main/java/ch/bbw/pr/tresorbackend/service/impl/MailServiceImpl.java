@@ -1,12 +1,14 @@
 package ch.bbw.pr.tresorbackend.service.impl;
 
 import ch.bbw.pr.tresorbackend.TresorbackendApplication;
+import ch.bbw.pr.tresorbackend.exception.ApplicationError;
 import ch.bbw.pr.tresorbackend.model.ConfigProperties;
 import ch.bbw.pr.tresorbackend.model.User;
 import ch.bbw.pr.tresorbackend.service.MailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -24,7 +26,7 @@ public class MailServiceImpl implements MailService {
     private final ConfigProperties configProperties;
 
     @Override
-    public void sendPasswordResetHTML(String resetLink, String resetLinkExpirationTime, User user) {
+    public void sendPasswordResetHTML(String resetLink, String resetLinkExpirationTime, User user) throws ApplicationError {
         if (!configProperties.getSendMail()) {
             TresorbackendApplication.getLogger().info("MailServiceImpl.sendPasswordResetHTML: sending mail is disabled.");
             return;
@@ -52,6 +54,7 @@ public class MailServiceImpl implements MailService {
             helper.setText(html, true);
         } catch (MessagingException | UnsupportedEncodingException e) {
             TresorbackendApplication.getLogger().error("MailServiceImpl.sendPasswordResetHTML: failed to set mail metadata: {}", e.getMessage());
+            throw new ApplicationError(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to send mail");
         }
 
         javaMailSender.send(message);
