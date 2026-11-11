@@ -1,5 +1,9 @@
 package ch.bbw.pr.tresorbackend.util;
 
+import ch.bbw.pr.tresorbackend.TresorbackendApplication;
+import ch.bbw.pr.tresorbackend.exception.ApplicationError;
+import org.springframework.http.HttpStatus;
+
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
@@ -25,17 +29,18 @@ public class EncryptUtil {
     private static final int GCM_IV_LENGTH = 12;
     private static final int GCM_TAG_LENGTH = 128;
 
-    public EncryptUtil(String secretKey, String salt) {
+    public EncryptUtil(String secretKey, String salt) throws ApplicationError {
         try {
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
             KeySpec spec = new PBEKeySpec(secretKey.toCharArray(), salt.getBytes(), 65536, 256);
             secret = new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            TresorbackendApplication.getLogger().error(e.getMessage());
+            throw new ApplicationError(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to initialize EncryptUtil");
         }
     }
 
-    public String encrypt(String data) {
+    public String encrypt(String data) throws ApplicationError {
         try {
             Cipher cipher = Cipher.getInstance(algorithm);
 
@@ -56,12 +61,12 @@ public class EncryptUtil {
 
             return Base64.getEncoder().encodeToString(result);
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
+            TresorbackendApplication.getLogger().error(e.getMessage());
+            throw new ApplicationError(HttpStatus.INTERNAL_SERVER_ERROR, "Encrypt failed");
         }
-        return "Encryption error";
     }
 
-    public String decrypt(String data) {
+    public String decrypt(String data) throws ApplicationError {
         try {
             byte[] decoded = Base64.getDecoder().decode(data);
 
@@ -77,8 +82,8 @@ public class EncryptUtil {
             byte[] plainText = cipher.doFinal(cipherText);
             return new String(plainText);
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
+            TresorbackendApplication.getLogger().error(e.getMessage());
+            throw new ApplicationError(HttpStatus.INTERNAL_SERVER_ERROR, "Decrypt failed");
         }
-        return "Decryption error";
     }
 }
