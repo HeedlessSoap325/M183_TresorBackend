@@ -93,17 +93,17 @@ public class AuthController {
 
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PostMapping("/forgottenpassword")
-    public ResponseEntity<String> handleUserForgottenPassword(@Valid @RequestBody EmailAdress emailAdress) {
+    public ResponseEntity<MessageResponse> handleUserForgottenPassword(@Valid @RequestBody EmailAdress emailAdress) {
         TresorbackendApplication.getLogger().info("UserController.handleUserForgottenPassword: EmailAddress(email = {})", emailAdress.getEmail());
 
-        return userService.handleUserForgottenPassword(emailAdress);
+        return ResponseEntity.ok(userService.handleUserForgottenPassword(emailAdress));
     }
 
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PostMapping("/resetpassword")
-    public ResponseEntity<String> handleResetPassword(@Valid @RequestBody ResetPassword resetPassword) {
+    public ResponseEntity<MessageResponse> handleResetPassword(@Valid @RequestBody ResetPassword resetPassword) {
         TresorbackendApplication.getLogger().info("UserController.handleResetPassword: ResetPassword(email = {}, resetToken = {})", resetPassword.getEmail(), resetPassword.getResetToken());
 
-        return userService.handleResetPassword(resetPassword);
+        return ResponseEntity.ok(userService.handleResetPassword(resetPassword));
     }
 }

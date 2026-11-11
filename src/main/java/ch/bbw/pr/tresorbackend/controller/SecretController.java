@@ -5,8 +5,6 @@ import ch.bbw.pr.tresorbackend.model.*;
 import ch.bbw.pr.tresorbackend.service.SecretService;
 import ch.bbw.pr.tresorbackend.service.UserService;
 import ch.bbw.pr.tresorbackend.util.EncryptUtil;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,7 +28,7 @@ public class SecretController {
     // create secret REST API
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PostMapping("/")
-    public ResponseEntity<String> createSecret2(@Valid @RequestBody NewSecret newSecret) {
+    public ResponseEntity<MessageResponse> createSecret2(@Valid @RequestBody NewSecret newSecret) {
         User user = userService.findByEmail(newSecret.getEmail());
 
         //transfer secret and encrypt content
@@ -44,12 +42,7 @@ public class SecretController {
         secretService.createSecret(secret);
         TresorbackendApplication.getLogger().info("SecretController.createSecret, secret saved in db");
 
-        JsonObject obj = new JsonObject();
-        obj.addProperty("answer", "Secret saved");
-        String json = new Gson().toJson(obj);
-
-        TresorbackendApplication.getLogger().info("SecretController.createSecret {}", json);
-        return ResponseEntity.accepted().body(json);
+        return ResponseEntity.accepted().body(new MessageResponse("Secret saved"));
     }
 
     // Build Get Secrets by userId REST API
@@ -111,20 +104,15 @@ public class SecretController {
     // http://localhost:8080/api/secrets/1
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PutMapping("{id}")
-    public ResponseEntity<String> updateSecret(@PathVariable("id") Long secretId, @Valid @RequestBody NewSecret newSecret) {
+    public ResponseEntity<MessageResponse> updateSecret(@PathVariable("id") Long secretId, @Valid @RequestBody NewSecret newSecret) {
         // get Secret with id
         Secret dbSecrete = secretService.getSecretById(secretId);
         User user = userService.findByEmail(newSecret.getEmail());
-        if (user == null) return ResponseEntity.notFound().build();
 
         // check if Secret in db has not same userid
         if(!Objects.equals(dbSecrete.getUserId(), user.getId())){
             TresorbackendApplication.getLogger().info("SecretController.updateSecret: not same user id (secretUserId = {}, userId = {})", dbSecrete.getUserId(), user.getId());
-
-            JsonObject obj = new JsonObject();
-            obj.addProperty("answer", "Secret has not same user id");
-            String json = new Gson().toJson(obj);
-            return ResponseEntity.badRequest().body(json);
+            return ResponseEntity.badRequest().body(new MessageResponse("Secret has not same user id"));
         }
 
         // check if Secret can be decrypted with password
@@ -141,20 +129,16 @@ public class SecretController {
         // save secret in db
         secretService.createSecret(secret);
         TresorbackendApplication.getLogger().info("SecretController.updateSecret: secret updated in db");
-
-        JsonObject obj = new JsonObject();
-        obj.addProperty("answer", "Secret updated");
-        String json = new Gson().toJson(obj);
-        return ResponseEntity.accepted().body(json);
+        return ResponseEntity.accepted().body(new MessageResponse("Secret updated"));
     }
 
     // Build Delete Secret REST API
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @DeleteMapping("{id}")
-    public ResponseEntity<String> deleteSecret(@PathVariable("id") Long secretId) {
+    public ResponseEntity<MessageResponse> deleteSecret(@PathVariable("id") Long secretId) {
         // todo: Some kind of brute force delete, perhaps test first userid and encryptpassword
         secretService.deleteSecret(secretId);
         TresorbackendApplication.getLogger().info("SecretController.deleteSecret: successfully deleted Secret(id = {})", secretId);
-        return ResponseEntity.ok().body("Secret successfully deleted!");
+        return ResponseEntity.ok().body(new MessageResponse("Secret successfully deleted!"));
     }
 }

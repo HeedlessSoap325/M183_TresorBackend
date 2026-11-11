@@ -10,8 +10,6 @@ import ch.bbw.pr.tresorbackend.service.PasswordEncryptService;
 import ch.bbw.pr.tresorbackend.service.SafeDbCall;
 import ch.bbw.pr.tresorbackend.service.UserService;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -96,9 +94,14 @@ public class UserServiceImpl implements UserService {
         Optional<User> optionalExistingUser = SafeDbCall.safeDbCall(() ->
                         userRepository.findByEmail(emailAdress.getEmail()),
                 Optional.empty()
+    public MessageResponse handleUserForgottenPassword(EmailAdress emailAdress) throws ApplicationError {
         );
 
-        if (optionalExistingUser.isEmpty()) return ResponseEntity.notFound().build();
+        Optional<User> optionalExistingUser = SafeDbCall.safeDbCall(() -> userRepository.findByEmail(emailAdress.getEmail()), Optional.empty());
+        if (optionalExistingUser.isEmpty()) {
+            // Send a neutral response so this function can't be used to check if a email exists
+            return new MessageResponse("A reset link has been sent to your email. The link will expire in 10 Minutes.");
+        }
         User user = optionalExistingUser.get();
 
         ForgottenPasswordToken token = forgottenPasswordTokenRepository.save(new ForgottenPasswordToken(emailAdress.getEmail()));
@@ -109,17 +112,12 @@ public class UserServiceImpl implements UserService {
         TresorbackendApplication.getLogger().info("UserServiceImpl.handleUserForgottenPassword: token.id = {}", token.getId());
         TresorbackendApplication.getLogger().info("http://localhost:3000/user/reset_password?reset_token={}", token.getId());
 
-        JsonObject obj = new JsonObject();
-        obj.addProperty("message", "A reset link has been sent to your email. The link will expire in 10 Minutes.");
-        String json = new Gson().toJson(obj);
-        return ResponseEntity.ok().body(json);
+        return new MessageResponse("A reset link has been sent to your email. The link will expire in 10 Minutes.");
     }
 
     @Override
-    public ResponseEntity<String> handleResetPassword(ResetPassword resetPassword) {
+    public MessageResponse handleResetPassword(ResetPassword resetPassword) throws ApplicationError {
         Optional<ForgottenPasswordToken> forgottenPasswordTokenOptional = forgottenPasswordTokenRepository.findById(resetPassword.getResetToken());
-        JsonObject obj = new JsonObject();
-
         if (
                 forgottenPasswordTokenOptional.isEmpty() ||
                 !forgottenPasswordTokenOptional.get().getId().equals(resetPassword.getResetToken()) ||
@@ -150,8 +148,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         forgottenPasswordTokenRepository.delete(token);
 
-        obj.addProperty("message", "Password changed successfully.");
-        String json = new Gson().toJson(obj);
-        return ResponseEntity.ok().body(json);
+        return new MessageResponse("Password changed successfully.");
     }
 }

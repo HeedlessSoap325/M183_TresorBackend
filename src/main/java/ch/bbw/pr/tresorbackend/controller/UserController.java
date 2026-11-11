@@ -5,8 +5,6 @@ import ch.bbw.pr.tresorbackend.exception.ApplicationError;
 import ch.bbw.pr.tresorbackend.model.*;
 import ch.bbw.pr.tresorbackend.service.UserService;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -56,32 +54,19 @@ public class UserController {
     // Build Delete User REST API
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @DeleteMapping("{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable("id") Long userId) {
+    public ResponseEntity<MessageResponse> deleteUser(@PathVariable("id") Long userId) throws ApplicationError {
         if( userService.deleteUser(userId))
-            return ResponseEntity.ok().body("User successfully deleted!");
-        return ResponseEntity.notFound().build();
+            return ResponseEntity.ok().body(new MessageResponse("User successfully deleted!"));
+        throw new ApplicationError(HttpStatus.INTERNAL_SERVER_ERROR, "Could not delete user");
     }
 
     // get user id by email
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
     @PostMapping("/byemail")
-    public ResponseEntity<String> getUserIdByEmail(@Valid @RequestBody EmailAdress email) {
+    public ResponseEntity<MessageResponse> getUserIdByEmail(@Valid @RequestBody EmailAdress email) {
         TresorbackendApplication.getLogger().info("UserController.getUserIdByEmail: EmailAddress(email = {})", email.getEmail());
 
         User user = userService.findByEmail(email.getEmail());
-        if (user == null) {
-            TresorbackendApplication.getLogger().info("UserController.getUserIdByEmail: no user found with email");
-            JsonObject obj = new JsonObject();
-            obj.addProperty("message", "No user found with this email");
-            String json = new Gson().toJson(obj);
-
-            return ResponseEntity.badRequest().body(json);
-        }
-
-        JsonObject obj = new JsonObject();
-        obj.addProperty("answer", user.getId());
-        String json = new Gson().toJson(obj);
-
-        return ResponseEntity.accepted().body(json);
+        return ResponseEntity.accepted().body(new MessageResponse(user.getId().toString()));
     }
 }
