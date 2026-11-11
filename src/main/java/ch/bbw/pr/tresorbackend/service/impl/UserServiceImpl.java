@@ -29,6 +29,7 @@ public class UserServiceImpl implements UserService {
     private ForgottenPasswordTokenRepository forgottenPasswordTokenRepository;
     private PasswordEncryptService passwordEncryptService;
     private MailService mailService;
+    private final ConfigProperties configProperties;
 
     @Override
     public User createUser(User user) throws ApplicationError {
@@ -108,11 +109,11 @@ public class UserServiceImpl implements UserService {
 
         ForgottenPasswordToken token = forgottenPasswordTokenRepository.save(new ForgottenPasswordToken(emailAdress.getEmail()));
 
-        String reset_link = "http://localhost:3000/user/reset_password?reset_token=" + token.getId();
+        String reset_link = configProperties.getCrossOrigin() + "/user/reset_password?reset_token=" + token.getId();
         mailService.sendPasswordResetHTML(reset_link, "10 minutes", user);
 
         TresorbackendApplication.getLogger().info("UserServiceImpl.handleUserForgottenPassword: token.id = {}", token.getId());
-        TresorbackendApplication.getLogger().info("http://localhost:3000/user/reset_password?reset_token={}", token.getId());
+        TresorbackendApplication.getLogger().info("{}/user/reset_password?reset_token={}", configProperties.getCrossOrigin(), token.getId());
 
         return new MessageResponse("A reset link has been sent to your email. The link will expire in 10 Minutes.");
     }
