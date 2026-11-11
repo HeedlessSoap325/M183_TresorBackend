@@ -1,6 +1,7 @@
 package ch.bbw.pr.tresorbackend;
 
 import ch.bbw.pr.tresorbackend.model.ConfigProperties;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,16 +39,21 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/auth/check").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/api/secrets/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/api/auth/**").permitAll()
 
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth ->
                 oauth.jwt(jwtConfigurer -> {
                     jwtConfigurer.jwtAuthenticationConverter(jwtAuthenticationConverter());
+                })
+                .authenticationEntryPoint((req, res, ex) -> {
+                    res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    res.setContentType("application/json");
+                    res.getWriter().write("{\"error\":\"unauthorized\"}");
                 })
             );
 
@@ -57,11 +63,6 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
     }
 
     @Bean
