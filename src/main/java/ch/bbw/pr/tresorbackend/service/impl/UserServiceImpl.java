@@ -90,12 +90,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<String> handleUserForgottenPassword(EmailAdress emailAdress) {
-        Optional<User> optionalExistingUser = SafeDbCall.safeDbCall(() ->
-                        userRepository.findByEmail(emailAdress.getEmail()),
-                Optional.empty()
     public MessageResponse handleUserForgottenPassword(EmailAdress emailAdress) throws ApplicationError {
+        List<ForgottenPasswordToken> activeTokens = forgottenPasswordTokenRepository.findForgottenPasswordTokensByEmailEqualsAndIssueNotNullAndIssueAfter(
+            emailAdress.getEmail(),
+            new Date(System.currentTimeMillis() - 10 * 60 * 1000) // 10 Minutes
         );
+        if (activeTokens.size() >= 3) {
+            throw new ApplicationError(HttpStatus.BAD_REQUEST, "Too many requests, please try again later.");
+        }
 
         Optional<User> optionalExistingUser = SafeDbCall.safeDbCall(() -> userRepository.findByEmail(emailAdress.getEmail()), Optional.empty());
         if (optionalExistingUser.isEmpty()) {
