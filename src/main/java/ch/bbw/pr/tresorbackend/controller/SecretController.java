@@ -1,10 +1,12 @@
 package ch.bbw.pr.tresorbackend.controller;
 
 import ch.bbw.pr.tresorbackend.TresorbackendApplication;
+import ch.bbw.pr.tresorbackend.exception.ApplicationError;
 import ch.bbw.pr.tresorbackend.model.*;
 import ch.bbw.pr.tresorbackend.service.SecretService;
 import ch.bbw.pr.tresorbackend.service.UserService;
 import ch.bbw.pr.tresorbackend.util.EncryptUtil;
+import com.google.gson.JsonObject;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -61,7 +63,17 @@ public class SecretController {
 
         // Decrypt content
         for(Secret secret: secrets) {
-            secret.setContent(new EncryptUtil(credentials.getEncryptPassword(), user.getSalt()).decrypt(secret.getContent()));
+            String content = "";
+            try {
+                content = new EncryptUtil(credentials.getEncryptPassword(), user.getSalt()).decrypt(secret.getContent());
+            } catch (ApplicationError e) {
+                JsonObject obj = new JsonObject();
+                obj.addProperty("kind", "error");
+                obj.addProperty("message", e.getMessage());
+                content = obj.toString();
+            }
+
+            secret.setContent(content);
         }
 
         TresorbackendApplication.getLogger().info("SecretController.getSecretsByUserId: successfully decrypted all user secrets");
@@ -84,7 +96,17 @@ public class SecretController {
 
         // Decrypt content
         for(Secret secret: secrets) {
-            secret.setContent(new EncryptUtil(credentials.getEncryptPassword(), user.getSalt()).decrypt(secret.getContent()));
+            String content = "";
+            try {
+                content = new EncryptUtil(credentials.getEncryptPassword(), user.getSalt()).decrypt(secret.getContent());
+            } catch (ApplicationError e) {
+                JsonObject obj = new JsonObject();
+                obj.addProperty("kind", "error");
+                obj.addProperty("message", e.getMessage());
+                content = obj.toString();
+            }
+
+            secret.setContent(content);
         }
 
         TresorbackendApplication.getLogger().info("SecretController.getSecretsByEmail: successfully decrypted all user secrets");
