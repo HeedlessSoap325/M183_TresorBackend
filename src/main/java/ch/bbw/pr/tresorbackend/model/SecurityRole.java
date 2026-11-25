@@ -10,4 +10,9 @@ public enum SecurityRole {
     ADMIN("ADMIN");
 
     private final String value;
+
+    @Override
+    public String toString() {
+        return this.getValue();
+    }
 }
