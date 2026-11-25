@@ -29,7 +29,7 @@ import java.util.Map;
 @Service
 @AllArgsConstructor
 public class TwoFactorAuthenticationServiceImpl implements TwoFactorAuthenticationService {
-    private static final String ISSUER = "TresorAplikation";
+    private static final String ISSUER = "TresorApplikation";
 
     private final UserService userService;
 
