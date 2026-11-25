@@ -6,10 +6,7 @@ import ch.bbw.pr.tresorbackend.model.User;
 import ch.bbw.pr.tresorbackend.service.JwtService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwsHeader;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -19,6 +16,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class JwtServiceImpl implements JwtService {
     private final JwtEncoder jwtEncoder;
+    private final JwtDecoder jwtDecoder;
     private final ConfigProperties configProperties;
 
     @Override

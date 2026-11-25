@@ -1,5 +1,6 @@
 package ch.bbw.pr.tresorbackend.model;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Value;
 
@@ -15,4 +16,7 @@ public class LoginUser {
 
     @NotEmpty (message="Password is required.")
     private String password;
+
+    @Nullable
+    private String otp;
 }

@@ -46,4 +46,10 @@ public class User {
     @Column(name = "user_authority")
     @Enumerated(EnumType.STRING)
     private Set<SecurityRole> authorities;
+
+    @Column(nullable = false)
+    private boolean is2FAEnabled;
+
+    @Column(nullable = true)
+    private String TwoFASecret;
 }

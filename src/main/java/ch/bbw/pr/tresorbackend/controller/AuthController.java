@@ -3,12 +3,16 @@ package ch.bbw.pr.tresorbackend.controller;
 import ch.bbw.pr.tresorbackend.TresorbackendApplication;
 import ch.bbw.pr.tresorbackend.exception.ApplicationError;
 import ch.bbw.pr.tresorbackend.model.*;
+import ch.bbw.pr.tresorbackend.model.twoFA.TwoFactorAuthenticationEnableResponse;
+import ch.bbw.pr.tresorbackend.model.twoFA.TwoFactorAuthenticationVerifyRequest;
 import ch.bbw.pr.tresorbackend.service.*;
+import ch.bbw.pr.tresorbackend.twoFA.TwoFactorAuthenticationService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +26,7 @@ public class AuthController {
     private final UserService userService;
     private final PasswordEncryptService passwordService;
     private final ReCAPTCHAService reCAPTCHAService;
+    private final TwoFactorAuthenticationService twoFactorAuthenticationService;
 
     // build create User REST API
     @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
@@ -47,7 +52,9 @@ public class AuthController {
             registerUser.getEmail(),
             passwordService.hashPassword(registerUser.getPassword()),
             BCrypt.gensalt(),
-            Set.of(SecurityRole.USER)
+            Set.of(SecurityRole.USER),
+            false,
+            null
         );
 
         User savedUser = userService.createUser(user);
@@ -65,6 +72,16 @@ public class AuthController {
         if (!passwordService.matchPassword(loginUser.getPassword(), user.getPassword())) {
             TresorbackendApplication.getLogger().info("AuthController.doLoginUser: provided password and hash didn't match");
             throw new ApplicationError(HttpStatus.BAD_REQUEST, "Email and password combination does not match");
+        }
+
+        if (twoFactorAuthenticationService.is2FAActive(user)) {
+            if (loginUser.getOtp() == null) {
+                throw new ApplicationError(HttpStatus.TEMPORARY_REDIRECT, "Please provide your OTP");
+            }
+
+            if (!twoFactorAuthenticationService.isValid(user, loginUser.getOtp())) {
+                throw new ApplicationError(HttpStatus.BAD_REQUEST, "Two-factor authentication is invalid");
+            }
         }
 
         TresorbackendApplication.getLogger().info("AuthController.doLoginUser: login successful");
@@ -105,5 +122,29 @@ public class AuthController {
         TresorbackendApplication.getLogger().info("UserController.handleResetPassword: ResetPassword(email = {}, resetToken = {})", resetPassword.getEmail(), resetPassword.getResetToken());
 
         return ResponseEntity.ok(userService.handleResetPassword(resetPassword));
+    }
+
+    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
+    @PostMapping("/enable2fa")
+    public ResponseEntity<TwoFactorAuthenticationEnableResponse> enable2FA(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(twoFactorAuthenticationService.enable2FA(user.getEmail()));
+    }
+
+    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
+    @PostMapping("/verify2fa")
+    public ResponseEntity<Void> verify2FA(@RequestBody TwoFactorAuthenticationVerifyRequest request) {
+        User user = userService.findByEmail(request.getEmail());
+        if (twoFactorAuthenticationService.isValid(user, request.getOtp())) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @CrossOrigin(origins = "${dev.heedlesssoap.tresorbackend.cross-origin}")
+    @PostMapping("/disable2fa")
+    public ResponseEntity<Void> disable2FA(@AuthenticationPrincipal User user) {
+        twoFactorAuthenticationService.disable2FA(user.getEmail());
+        return ResponseEntity.ok().build();
     }
 }
