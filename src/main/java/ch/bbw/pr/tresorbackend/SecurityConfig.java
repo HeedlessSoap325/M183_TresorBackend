@@ -38,7 +38,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, ConfigProperties configProperties, OAuth2UserService oAuth2UserService, OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, ConfigProperties configProperties, OAuth2UserService oAuth2UserService, OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler, CustomJwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(
@@ -67,7 +67,7 @@ public class SecurityConfig {
             .oauth2ResourceServer(oauth ->
                 oauth.jwt(jwtConfigurer ->
                     jwtConfigurer.jwtAuthenticationConverter(
-                        jwtAuthenticationConverter()
+                        jwtAuthenticationConverter
                     )
                 )
             )
@@ -84,16 +84,6 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter(){
-        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
-        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
-        jwtConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-        return jwtConverter;
     }
 
     @Bean
