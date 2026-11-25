@@ -1,6 +1,6 @@
 package ch.bbw.pr.tresorbackend.repository;
 
-import ch.bbw.pr.tresorbackend.model.ForgottenPasswordToken;
+import ch.bbw.pr.tresorbackend.model.auth.ForgottenPasswordToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Date;

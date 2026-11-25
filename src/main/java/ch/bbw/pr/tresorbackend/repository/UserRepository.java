@@ -1,6 +1,6 @@
 package ch.bbw.pr.tresorbackend.repository;
 
-import ch.bbw.pr.tresorbackend.model.User;
+import ch.bbw.pr.tresorbackend.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

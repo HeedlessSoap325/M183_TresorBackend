@@ -3,7 +3,7 @@ package ch.bbw.pr.tresorbackend.service.impl;
 import ch.bbw.pr.tresorbackend.TresorbackendApplication;
 import ch.bbw.pr.tresorbackend.exception.ApplicationError;
 import ch.bbw.pr.tresorbackend.model.ConfigProperties;
-import ch.bbw.pr.tresorbackend.model.User;
+import ch.bbw.pr.tresorbackend.model.user.User;
 import ch.bbw.pr.tresorbackend.service.MailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

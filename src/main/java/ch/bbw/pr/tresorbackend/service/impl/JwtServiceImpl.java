@@ -1,8 +1,8 @@
 package ch.bbw.pr.tresorbackend.service.impl;
 
 import ch.bbw.pr.tresorbackend.model.ConfigProperties;
-import ch.bbw.pr.tresorbackend.model.SecurityRole;
-import ch.bbw.pr.tresorbackend.model.User;
+import ch.bbw.pr.tresorbackend.model.user.SecurityRole;
+import ch.bbw.pr.tresorbackend.model.user.User;
 import ch.bbw.pr.tresorbackend.service.JwtService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;

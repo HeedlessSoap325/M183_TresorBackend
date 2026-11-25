@@ -1,6 +1,6 @@
 package ch.bbw.pr.tresorbackend.repository;
 
-import ch.bbw.pr.tresorbackend.model.Secret;
+import ch.bbw.pr.tresorbackend.model.secret.Secret;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

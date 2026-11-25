@@ -1,6 +1,6 @@
-package ch.bbw.pr.tresorbackend;
+package ch.bbw.pr.tresorbackend.jwt;
 
-import ch.bbw.pr.tresorbackend.model.User;
+import ch.bbw.pr.tresorbackend.model.user.User;
 import ch.bbw.pr.tresorbackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;

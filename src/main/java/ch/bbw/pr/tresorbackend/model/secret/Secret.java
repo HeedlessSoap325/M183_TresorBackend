@@ -1,4 +1,4 @@
-package ch.bbw.pr.tresorbackend.model;
+package ch.bbw.pr.tresorbackend.model.secret;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,7 +1,7 @@
 package ch.bbw.pr.tresorbackend.service.impl;
 
 import ch.bbw.pr.tresorbackend.exception.ApplicationError;
-import ch.bbw.pr.tresorbackend.model.Secret;
+import ch.bbw.pr.tresorbackend.model.secret.Secret;
 import ch.bbw.pr.tresorbackend.repository.SecretRepository;
 import ch.bbw.pr.tresorbackend.service.SafeDbCall;
 import ch.bbw.pr.tresorbackend.service.SecretService;

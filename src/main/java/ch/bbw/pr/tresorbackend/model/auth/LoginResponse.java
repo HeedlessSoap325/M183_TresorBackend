@@ -1,4 +1,4 @@
-package ch.bbw.pr.tresorbackend.model;
+package ch.bbw.pr.tresorbackend.model.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

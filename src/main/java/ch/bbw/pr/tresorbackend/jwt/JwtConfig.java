@@ -1,4 +1,4 @@
-package ch.bbw.pr.tresorbackend;
+package ch.bbw.pr.tresorbackend.jwt;
 
 import ch.bbw.pr.tresorbackend.model.ConfigProperties;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;

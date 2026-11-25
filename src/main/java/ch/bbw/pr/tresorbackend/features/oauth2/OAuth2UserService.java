@@ -1,4 +1,4 @@
-package ch.bbw.pr.tresorbackend.oauth2;
+package ch.bbw.pr.tresorbackend.features.oauth2;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;

@@ -1,7 +1,7 @@
-package ch.bbw.pr.tresorbackend.twoFA;
+package ch.bbw.pr.tresorbackend.features.twoFA;
 
 import ch.bbw.pr.tresorbackend.exception.ApplicationError;
-import ch.bbw.pr.tresorbackend.model.User;
+import ch.bbw.pr.tresorbackend.model.user.User;
 import ch.bbw.pr.tresorbackend.model.twoFA.TwoFactorAuthenticationEnableResponse;
 import ch.bbw.pr.tresorbackend.service.UserService;
 import com.google.zxing.BarcodeFormat;

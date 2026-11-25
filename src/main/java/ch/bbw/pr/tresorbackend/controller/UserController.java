@@ -3,6 +3,8 @@ package ch.bbw.pr.tresorbackend.controller;
 import ch.bbw.pr.tresorbackend.TresorbackendApplication;
 import ch.bbw.pr.tresorbackend.exception.ApplicationError;
 import ch.bbw.pr.tresorbackend.model.*;
+import ch.bbw.pr.tresorbackend.model.user.EmailAdress;
+import ch.bbw.pr.tresorbackend.model.user.User;
 import ch.bbw.pr.tresorbackend.service.UserService;
 
 import jakarta.validation.Valid;

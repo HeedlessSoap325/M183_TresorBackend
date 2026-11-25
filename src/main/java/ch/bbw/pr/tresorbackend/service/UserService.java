@@ -1,11 +1,10 @@
 package ch.bbw.pr.tresorbackend.service;
 
 import ch.bbw.pr.tresorbackend.exception.ApplicationError;
-import ch.bbw.pr.tresorbackend.model.EmailAdress;
+import ch.bbw.pr.tresorbackend.model.user.EmailAdress;
 import ch.bbw.pr.tresorbackend.model.MessageResponse;
-import ch.bbw.pr.tresorbackend.model.ResetPassword;
-import ch.bbw.pr.tresorbackend.model.User;
-import org.springframework.http.ResponseEntity;
+import ch.bbw.pr.tresorbackend.model.auth.ResetPassword;
+import ch.bbw.pr.tresorbackend.model.user.User;
 
 import java.util.List;
 

@@ -2,6 +2,9 @@ package ch.bbw.pr.tresorbackend.service.impl;
 
 import ch.bbw.pr.tresorbackend.exception.ApplicationError;
 import ch.bbw.pr.tresorbackend.model.*;
+import ch.bbw.pr.tresorbackend.model.auth.AuthResponse;
+import ch.bbw.pr.tresorbackend.model.auth.RotationResult;
+import ch.bbw.pr.tresorbackend.model.user.User;
 import ch.bbw.pr.tresorbackend.service.AuthService;
 import ch.bbw.pr.tresorbackend.service.JwtService;
 import ch.bbw.pr.tresorbackend.service.RefreshTokenService;
@@ -11,7 +14,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 

@@ -1,7 +1,7 @@
 package ch.bbw.pr.tresorbackend.service;
 
 import ch.bbw.pr.tresorbackend.exception.ApplicationError;
-import ch.bbw.pr.tresorbackend.model.AuthResponse;
+import ch.bbw.pr.tresorbackend.model.auth.AuthResponse;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface AuthService {

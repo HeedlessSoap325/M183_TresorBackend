@@ -1,8 +1,8 @@
 package ch.bbw.pr.tresorbackend.service;
 
 import ch.bbw.pr.tresorbackend.exception.ApplicationError;
-import ch.bbw.pr.tresorbackend.model.RotationResult;
-import ch.bbw.pr.tresorbackend.model.User;
+import ch.bbw.pr.tresorbackend.model.auth.RotationResult;
+import ch.bbw.pr.tresorbackend.model.user.User;
 
 public interface RefreshTokenService {
     String generateToken();
