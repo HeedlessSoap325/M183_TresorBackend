@@ -41,6 +41,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/check").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/users/{id}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/auth/enable2fa").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/auth/disable2fa").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/api/secrets/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/api/auth/**").permitAll()
